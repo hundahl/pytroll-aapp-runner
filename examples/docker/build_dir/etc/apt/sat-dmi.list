@@ -1,0 +1,2 @@
+deb     http://websat.dmi.dk/apt  xenial main
+deb-src http://websat.dmi.dk/apt  xenial main

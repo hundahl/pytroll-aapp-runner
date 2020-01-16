@@ -1,0 +1,75 @@
+FROM ubuntu:xenial
+
+# Configure apt for install of DMI's AAPP package
+COPY etc/apt/dmisat /etc/apt/apt.conf.d/dmisat
+
+COPY etc/apt/sat-dmi.list /etc/apt/sources.list.d/sat-dmi.list
+
+RUN apt-get update &&  apt-get -y --no-install-recommends install \
+    gosu \
+    python-gdal \
+    aapp \
+    git \
+    gcc \
+    g++ \
+    libssl-dev \
+    python3-dev \
+    python3-pip \
+    make \
+    less \
+    software-properties-common \
+    libxml2-dev
+
+
+RUN add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get -y --no-install-recommends install python3.6 \
+    python3.6-dev
+
+RUN python3.6 -m pip install setuptools \
+    wheel 
+
+RUN python3.6 -m pip install pynacl \
+    git+https://github.com/pytroll/pytroll-collectors.git#egg=pytroll-collectors \
+    git+https://github.com/pytroll/satpy.git#egg=satpy \
+    git+https://github.com/storpipfugl/pykdtree.git#egg=pykdtree \
+    git+https://github.com/pytroll/trollsift.git#egg=trollsift \
+    git+https://github.com/pytroll/trollimage.git#egg=trollimage \
+    git+https://github.com/pytroll/pyorbital.git#egg=pyorbital \
+    git+https://github.com/pytroll/pycoast.git#egg=pycoast \
+    git+https://github.com/pytroll/pyresample.git#egg=pyresample \
+    git+https://github.com/pytroll/trollmoves.git#egg=trollmoves \
+    git+https://github.com/pytroll/posttroll.git#egg=posttroll \
+    git+https://github.com/pytroll/pytroll-schedule.git#egg=pytroll-schedule \
+    git+https://github.com/pytroll/trollflow2.git#egg=trollflow2 \
+    git+https://github.com/pytroll/pytroll-aapp-runner.git#egg=pytroll-aapp-runner \
+    python-geotiepoints \
+    watchdog \
+    rasterio \
+    git+https://github.com/Supervisor/supervisor.git#egg=supervisor \
+    git+https://github.com/Supervisor/superlance.git#egg=superlance
+
+
+RUN apt-get -y --no-install-recommends install vim
+       
+#COPY etc/satpy/areas.yaml etc/satpy/ninjotiff_products.cfg /usr/local/lib/python3.5/dist-packages/satpy/etc/
+
+ADD etc/kai/TAR_TOOLS_EPS_KAI.TAR.gz /usr/local/src/
+WORKDIR /usr/local/src/kai-1.11/
+RUN ./configure && make && make install
+
+# Make a workdir that looks like repo
+WORKDIR /workdir
+#RUN mkdir -p log output work
+#COPY config /home/user/pytrollworkflow/config
+
+# Set aapp dirs
+#
+ADD etc/load_tles.py /usr/local/bin/
+# RUN /usr/local/bin/load_tles.py
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN  chmod 755 /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["supervisord", "-c", "/mnt/config/supervisord.conf"]

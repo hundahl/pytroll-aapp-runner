@@ -36,3 +36,8 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Ignore folders
+examples/docker/logs/*
+examples/docker/input/*
+examples/docker/output/*
